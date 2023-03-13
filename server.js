@@ -1,6 +1,8 @@
 const inquirer = require("inquirer");
 const mysql = require("mysql2");
 const cTable = require("console.table");
+const View = require("./lib/view");
+const newView = new View();
 
 // Connect to database
 const db = mysql.createConnection(
@@ -10,10 +12,10 @@ const db = mysql.createConnection(
     password: "",
     database: "employees_db",
   },
-  console.log(`Connected to the movies_db database.`)
+  console.log(`Connected to the employees_db database.`)
 );
 
-//questions
+// Main menu options for inquirer
 const mainMenuList = [
   {
     type: "list",
@@ -32,6 +34,7 @@ const mainMenuList = [
   },
 ];
 
+// Handle user responses from main menu and call corresponding queries
 const mainMenu = () => {
   inquirer
     .prompt(mainMenuList)
@@ -41,16 +44,15 @@ const mainMenu = () => {
       } else if (response.menuChoice === "View All Roles") {
         viewRoles();
       } else if (response.menuChoice === "View All Departments") {
-        viewDepartments();
+        // viewDepartments();
+        newView.getDepartments(); // attempt with imported code
+        mainMenu(); // delete if using viewDepartments()
       } else {
         console.log("User chose " + response.menuChoice);
       }
     })
     .catch((err) => console.error(err));
 };
-
-// Initialize program
-mainMenu();
 
 // Show all employees with their id, first name, last name, job title,
 // department, salary, and manager
@@ -126,3 +128,7 @@ const viewDepartments = () => {
     mainMenu();
   });
 };
+
+// Initialize program
+const init = () => mainMenu();
+init();
