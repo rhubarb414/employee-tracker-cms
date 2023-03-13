@@ -1,0 +1,24 @@
+{
+  "name": "12-employee-tracker-cms",
+  "version": "1.0.0",
+  "description": "GIVEN a command-line application that accepts user input",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rhubarb414/employee-tracker-cms.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rhubarb414/employee-tracker-cms/issues"
+  },
+  "homepage": "https://github.com/rhubarb414/employee-tracker-cms#readme",
+  "dependencies": {
+    "inquirer": "^8.2.4"
+  }
+}
