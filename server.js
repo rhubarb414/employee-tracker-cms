@@ -1,6 +1,9 @@
 const inquirer = require("inquirer");
 const mysql = require("mysql2");
 const cTable = require("console.table");
+
+// Tried using a class to make the view deparments query.
+// It cleans up this server file, but not sure this is what was intended.
 const View = require("./lib/view");
 const newView = new View();
 
@@ -20,7 +23,9 @@ const mainMenuList = [
   {
     type: "list",
     name: "menuChoice",
-    message: "What would you like to do?",
+    message: `
+What would you like to do?
+    `,
     choices: [
       "View All Employees",
       "Add Employee",
@@ -31,6 +36,23 @@ const mainMenuList = [
       "Add Department",
       "Quit",
     ],
+  },
+];
+
+// Add new department field for inquirer
+const askForDepartment = [
+  {
+    type: "input",
+    name: "department",
+    message: "Enter new department name",
+    validate(value) {
+      if (!value) {
+        return "Name cannot be empty";
+        // Would be handy to validate on whether dept exists already
+      } else {
+        return true;
+      }
+    },
   },
 ];
 
@@ -47,6 +69,8 @@ const mainMenu = () => {
         // viewDepartments();
         newView.getDepartments(); // attempt with imported code
         mainMenu(); // delete if using viewDepartments()
+      } else if (response.menuChoice === "Add Department") {
+        addDepartment();
       } else {
         console.log("User chose " + response.menuChoice);
       }
@@ -118,17 +142,64 @@ const viewRoles = () => {
   );
 };
 
-// View all departments and their id
-const viewDepartments = () => {
-  db.query(` SELECT * FROM department`, (err, result) => {
-    if (err) {
-      console.log(err);
-    }
-    console.table(result);
-    mainMenu();
-  });
+// ~~ Not in use. Using ./lib/view.js~~
+
+// // View all departments and their id
+// const viewDepartments = () => {
+//   db.query(` SELECT * FROM department`, (err, result) => {
+//     if (err) {
+//       console.log(err);
+//     }
+//     console.log("\n");
+//     console.table(`"${result}"`);
+//     mainMenu();
+//   });
+// };
+
+//addDepartment using a promise
+const addDepartment = () => {
+  inquirer
+    .prompt(askForDepartment)
+    .then((response) => {
+      db.promise()
+        .query(
+          `
+        INSERT INTO department (name)
+        VALUES ("${response.department}")
+        `
+        )
+        .then(() =>
+          console.log(`
+        Department "${response.department}" added
+        `)
+        )
+        .catch((err) => console.log(err))
+        .then(() => mainMenu());
+    })
+    .catch((err) => console.error(err));
 };
 
 // Initialize program
 const init = () => mainMenu();
 init();
+
+// ~~~~~~
+// const addDepartment = () => {
+//   inquirer
+//     .prompt(askForDepartment)
+//     .then((response) => {
+//       db.query(
+//         `
+//       INSERT INTO department (name)
+//       VALUES ("${response.department}")
+//       `,
+//         (err, result) => {
+//           if (err) {
+//             console.log(err);
+//           }
+//           console.table(result);
+//         }
+//       );
+//     })
+//     .catch((err) => console.error(err));
+// };
