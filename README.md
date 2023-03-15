@@ -42,7 +42,8 @@ After cloning the repo, be sure to install dependencies. Then run the schema and
 
 ## Usage
 
-Follow the prompts in the command line. See this demo gif:
+Follow the prompts in the command line. See this demo video:
+[https://drive.google.com/file/d/17z5z5D2lLt4GcJBUQZ1-9KBn_eV5Q640/view?usp=sharing](https://drive.google.com/file/d/17z5z5D2lLt4GcJBUQZ1-9KBn_eV5Q640/view?usp=sharing)
 
 ## Credits
 
