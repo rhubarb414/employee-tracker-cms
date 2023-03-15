@@ -153,6 +153,23 @@ const askForEmployee = [
   },
 ];
 
+// Update role prompts for inquirer
+const askForEmpNewRole = [
+  {
+    type: "list",
+    name: "employee",
+    message: "Choose employee to update",
+    choices: empArr,
+  },
+
+  {
+    type: "list",
+    name: "role",
+    message: "Choose employee's role",
+    choices: roleArr,
+  },
+];
+
 // Handle user responses from main menu and call corresponding queries
 const mainMenu = () => {
   inquirer
@@ -172,6 +189,8 @@ const mainMenu = () => {
         addRole();
       } else if (response.menuChoice === "Add Employee") {
         addEmployee();
+      } else if (response.menuChoice === "Update Employee Role") {
+        updateEmpRole();
       } else {
         console.log("User chose " + response.menuChoice);
       }
@@ -319,7 +338,7 @@ const addEmployee = async () => {
     mgrID = null;
   }
 
-  // // Insert the new role
+  // Insert the new role
   db.promise()
     .query(
       `
@@ -334,6 +353,36 @@ const addEmployee = async () => {
     )
     .catch((err) => console.log(err))
     .then(() => updateEmpArr())
+    .then(() => mainMenu());
+};
+
+const updateEmpRole = async () => {
+  const roleUpdate = await inquirer.prompt(askForEmpNewRole);
+  //   Compute dept ID from dept name by looking at deptArr
+  const roleID =
+    roleArr.findIndex((element) => element === roleUpdate.role) + 1;
+
+  // Index in empArr doesn't need +1 because "None" is at position 0
+  let empID = empArr.findIndex((element) => element === roleUpdate.employee);
+
+  // Handle the case user chose "none" for the employee
+  if (empID === "None") {
+    return console.log(`Employee "${empID}" not found`);
+  }
+
+  // Update employee in db
+  db.promise()
+    .query(
+      `UPDATE employee
+    SET role_id = ${roleID}
+    WHERE id = ${empID};`
+    )
+    .then(() =>
+      console.log(`
+              Employee role for "${roleUpdate.employee}" updated to ${roleUpdate.role}
+              `)
+    )
+    .catch((err) => console.log(err))
     .then(() => mainMenu());
 };
 
@@ -367,6 +416,7 @@ const updateRoleArr = () => {
   });
 };
 
+// Helper function to pull employees into an array
 const updateEmpArr = () => {
   db.query(` SELECT first_name, last_name FROM employee`, (err, result) => {
     if (err) {
