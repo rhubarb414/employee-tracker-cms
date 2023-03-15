@@ -7,6 +7,8 @@ const cTable = require("console.table");
 const View = require("./lib/view");
 const newView = new View();
 
+let deptArr = []; //for helper function updateDeptArr()
+
 // Connect to database
 const db = mysql.createConnection(
   {
@@ -14,8 +16,8 @@ const db = mysql.createConnection(
     user: "root",
     password: "",
     database: "employees_db",
-  },
-  console.log(`Connected to the employees_db database.`)
+  }
+  //   console.log(`Connected to the employees_db database.`) // delete
 );
 
 // Main menu options for inquirer
@@ -39,7 +41,7 @@ What would you like to do?
   },
 ];
 
-// Add new department field for inquirer
+// Add new department prompt for inquirer
 const askForDepartment = [
   {
     type: "input",
@@ -49,6 +51,53 @@ const askForDepartment = [
       if (!value) {
         return "Name cannot be empty";
         // Would be handy to validate on whether dept exists already
+      } else if (deptArr.includes(value)) {
+        return "Department already exists";
+      } else {
+        return true;
+      }
+    },
+  },
+];
+
+// Add new role prompts for inquirer
+const askForRole = [
+  {
+    type: "input",
+    name: "title",
+    message: "Enter new role title",
+    validate(value) {
+      if (!value) {
+        return "Name cannot be empty";
+        // Would be handy to validate on whether dept exists already
+      } else {
+        return true;
+      }
+    },
+  },
+  {
+    type: "input",
+    name: "salary",
+    message: "Enter role salary",
+    validate(value) {
+      if (!value) {
+        return "Salary cannot be empty";
+        //   } else if (typeof value !== "number") {
+        //     return `Salary must be a number, returned ${typeof value}`; // doesn't work, stores as string
+      } else {
+        return true;
+      }
+    },
+  },
+  {
+    type: "input",
+    name: "department",
+    message: "Enter role department",
+    validate(value) {
+      if (!value) {
+        return "Department cannot be empty";
+      } else if (!deptArr.includes(value)) {
+        return `Department "${value}" doesn't exist`;
       } else {
         return true;
       }
@@ -71,6 +120,8 @@ const mainMenu = () => {
         mainMenu(); // delete if using viewDepartments()
       } else if (response.menuChoice === "Add Department") {
         addDepartment();
+      } else if (response.menuChoice === "Add Role") {
+        addRole();
       } else {
         console.log("User chose " + response.menuChoice);
       }
@@ -174,13 +225,156 @@ const addDepartment = () => {
         `)
         )
         .catch((err) => console.log(err))
+        .then(() => updateDeptArr()) // Add new department to deptArr
         .then(() => mainMenu());
     })
     .catch((err) => console.error(err));
 };
 
+// Add role using a promise
+// const addRole = () => {
+//   inquirer
+//     .prompt(askForRole)
+//     .then(async (response) => {
+//       const deptID = await getDeptID(response.department);
+//       console.log("dept ID = " + deptID);
+
+//       db.promise()
+//         .query(
+//           `
+//           INSERT INTO role (title, salary, department_id)
+//           VALUES ("${response.title}", ${response.salary}, ${deptID})
+//           `
+//         )
+//         .then(() =>
+//           console.log(`
+//           Role "${response.title}" added
+//           `)
+//         )
+//         .catch((err) => console.log(err))
+//         .then(() => mainMenu());
+//     })
+//     .catch((err) => console.error(err));
+// };
+
+// const addRole = async () => {
+//   const newRole = await inquirer.prompt(askForRole);
+//   //   console.log(newRole.department);
+//   const deptID = await getDeptID(newRole.department);
+//   console.log("dept ID = " + deptID);
+
+//   db.promise()
+//     .query(
+//       `
+//               INSERT INTO role (title, salary, department_id)
+//               VALUES ("${newRole.title}", ${newRole.salary}, ${deptID})
+//               `
+//     )
+//     .then(() =>
+//       console.log(`
+//               Role "${newRole.title}" added
+//               `)
+//     )
+//     .catch((err) => console.log(err))
+//     .then(() => mainMenu());
+// };
+
+const addRole = async () => {
+  const newRole = await inquirer.prompt(askForRole);
+  //   console.log(newRole.department);
+  const deptID = await getDeptID(newRole.department);
+  console.log("dept ID = " + deptID);
+
+  db.promise()
+    .query(
+      `
+                INSERT INTO role (title, salary, department_id)
+                VALUES ("${newRole.title}", ${newRole.salary}, ${deptID})
+                `
+    )
+    .then(() =>
+      console.log(`
+                Role "${newRole.title}" added
+                `)
+    )
+    .catch((err) => console.log(err))
+    .then(() => mainMenu());
+};
+
+// // Helper function get department id from department name.
+// // Takes a string
+// const getDeptID = async (name) => {
+//   const rowID = await db
+//     .promise()
+//     .query(`SELECT * FROM department`)
+//     .then((response) => {
+//       //response[0] is the table object
+//       response[0].forEach((row) => {
+//         if (row.name === name) {
+//           console.log(row.id);
+//           return row.id;
+//         }
+//       });
+//     })
+//     .catch((err) => console.log(err));
+//   return rowID;
+// };
+
+const getDeptID = (name) => {
+  db.promise()
+    .query(`SELECT * FROM department`)
+    .then((response) => {
+      //response[0] is the table object
+      response[0].forEach((dept) => {
+        if (dept.name === name) {
+          console.log(dept.id);
+          return dept.id;
+        }
+      });
+    })
+    .catch((err) => console.log(err));
+};
+
+const thingOne = getDeptID("Finance"); // delete
+console.log("thing one = " + thingOne); //delete
+
+// Helper function to pull departments into an array
+const updateDeptArr = () => {
+  db.query(` SELECT name FROM department`, (err, result) => {
+    if (err) {
+      console.log(err);
+    }
+    result.forEach((dept) => {
+      // Check if there is a new department in the table before adding to deptArr
+      if (!deptArr.includes(dept.name)) {
+        deptArr.push(dept.name);
+      }
+    });
+  });
+};
+
+// Helper function get department id from department name.
+// Takes a string
+// const getDeptID = (name) => {
+
+//   db.query(` SELECT * FROM department`, (err, table) => {
+//     if (err) {
+//       console.log(err);
+//     }
+//     table.forEach((row) => {
+//       if (row.name === name) {
+//         console.log(row.id);
+//         return row.id;
+//       }
+//     });
+//   });
+// };
+
 // Initialize program
-const init = () => mainMenu();
+const init = () => {
+  updateDeptArr();
+  mainMenu();
+};
 init();
 
 // ~~~~~~
