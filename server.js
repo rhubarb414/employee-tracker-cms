@@ -3,7 +3,7 @@ const mysql = require("mysql2");
 const cTable = require("console.table");
 
 // Tried using a class to make the view deparments query.
-// It cleans up this server file, but not sure this is what was intended.
+// It cleans up this server file, but not sure this is what was intended in the hw instructions
 const View = require("./lib/view");
 const view = new View();
 
@@ -11,20 +11,17 @@ let deptArr = []; // for helper function updateDeptArr()
 let roleArr = []; // for helper function updateRoleArr()
 
 // for helper function updateEmpArr()
-// initialized with "None" because this list is used when assigning a manager
+// initialized with "None" because this list is also used when assigning a manager
 // to a new employee
 let empArr = ["None"];
 
 // Connect to database
-const db = mysql.createConnection(
-  {
-    host: "127.0.0.1",
-    user: "root",
-    password: "",
-    database: "employees_db",
-  }
-  //   console.log(`Connected to the employees_db database.`) // delete
-);
+const db = mysql.createConnection({
+  host: "127.0.0.1",
+  user: "root",
+  password: "",
+  database: "employees_db",
+});
 
 // Main menu options for inquirer
 const mainMenuList = [
@@ -56,7 +53,6 @@ const askForDepartment = [
     validate(value) {
       if (!value) {
         return "Name cannot be empty";
-        // Would be handy to validate on whether dept exists already
       } else if (deptArr.includes(value)) {
         return "Department already exists";
       } else {
@@ -75,7 +71,6 @@ const askForRole = [
     validate(value) {
       if (!value) {
         return "Name cannot be empty";
-        // Would be handy to validate on whether dept exists already
       } else {
         return true;
       }
@@ -88,8 +83,6 @@ const askForRole = [
     validate(value) {
       if (!value) {
         return "Salary cannot be empty";
-        //   } else if (typeof value !== "number") {
-        //     return `Salary must be a number, returned ${typeof value}`; // doesn't work, stores as string
       } else {
         return true;
       }
@@ -180,9 +173,8 @@ const mainMenu = () => {
       } else if (response.menuChoice === "View All Roles") {
         viewRoles();
       } else if (response.menuChoice === "View All Departments") {
-        // viewDepartments();
-        view.getDepartments(); // attempt with imported code
-        mainMenu(); // delete if using viewDepartments()
+        view.getDepartments(); // use imported method
+        mainMenu();
       } else if (response.menuChoice === "Add Department") {
         addDepartment();
       } else if (response.menuChoice === "Add Role") {
@@ -264,7 +256,7 @@ const viewRoles = () => {
   );
 };
 
-//addDepartment using a promise
+// addDepartment using a promise
 const addDepartment = () => {
   inquirer
     .prompt(askForDepartment)
@@ -291,7 +283,7 @@ const addDepartment = () => {
 // Add new role
 const addRole = async () => {
   const newRole = await inquirer.prompt(askForRole);
-  // Compute dept ID from dept name by looking at deptArr
+  // Compute dept ID from dept name using deptArr
   const deptID =
     deptArr.findIndex((element) => element === newRole.department) + 1;
 
@@ -316,14 +308,14 @@ const addRole = async () => {
 // Add new employee
 const addEmployee = async () => {
   const newEmployee = await inquirer.prompt(askForEmployee);
-  //   Compute dept ID from dept name by looking at deptArr
+  //   Compute role ID from role name by looking at roleArr
   const roleID =
     roleArr.findIndex((element) => element === newEmployee.role) + 1;
 
   // Index in empArr doesn't need +1 because "None" is at position 0
   let mgrID = empArr.findIndex((element) => element === newEmployee.manager);
 
-  // Handle the case employee has no manager
+  // Handle the case where employee has no manager
   if (mgrID === "None") {
     mgrID = null;
   }
@@ -345,10 +337,11 @@ const addEmployee = async () => {
     .then(() => updateEmpArr())
     .then(() => mainMenu());
 };
+
 // Update employee role
 const updateEmpRole = async () => {
   const roleUpdate = await inquirer.prompt(askForEmpNewRole);
-  //   Compute dept ID from dept name by looking at deptArr
+  //   Compute role ID from role name by looking at roleArr
   const roleID =
     roleArr.findIndex((element) => element === roleUpdate.role) + 1;
 
