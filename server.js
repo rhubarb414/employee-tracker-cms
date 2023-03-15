@@ -5,9 +5,15 @@ const cTable = require("console.table");
 // Tried using a class to make the view deparments query.
 // It cleans up this server file, but not sure this is what was intended.
 const View = require("./lib/view");
-const newView = new View();
+const view = new View();
 
-let deptArr = []; //for helper function updateDeptArr()
+let deptArr = []; // for helper function updateDeptArr()
+let roleArr = []; // for helper function updateRoleArr()
+
+// for helper function updateEmpArr()
+// initialized with "None" because this list is used when assigning a manager
+// to a new employee
+let empArr = ["None"];
 
 // Connect to database
 const db = mysql.createConnection(
@@ -105,6 +111,48 @@ const askForRole = [
   },
 ];
 
+// Add new employee prompts for inquirer
+const askForEmployee = [
+  {
+    type: "input",
+    name: "firstName",
+    message: "Enter new employee's first name",
+    validate(value) {
+      if (!value) {
+        return "Name cannot be empty";
+      } else {
+        return true;
+      }
+    },
+  },
+  {
+    type: "input",
+    name: "lastName",
+    message: "Enter last name",
+    validate(value) {
+      if (!value) {
+        return "Name cannot be empty";
+      } else {
+        return true;
+      }
+    },
+  },
+
+  {
+    type: "list",
+    name: "role",
+    message: "Choose employee's role",
+    choices: roleArr,
+  },
+
+  {
+    type: "list",
+    name: "manager",
+    message: "Enter employee's manager",
+    choices: empArr,
+  },
+];
+
 // Handle user responses from main menu and call corresponding queries
 const mainMenu = () => {
   inquirer
@@ -116,12 +164,14 @@ const mainMenu = () => {
         viewRoles();
       } else if (response.menuChoice === "View All Departments") {
         // viewDepartments();
-        newView.getDepartments(); // attempt with imported code
+        view.getDepartments(); // attempt with imported code
         mainMenu(); // delete if using viewDepartments()
       } else if (response.menuChoice === "Add Department") {
         addDepartment();
       } else if (response.menuChoice === "Add Role") {
         addRole();
+      } else if (response.menuChoice === "Add Employee") {
+        addEmployee();
       } else {
         console.log("User chose " + response.menuChoice);
       }
@@ -237,7 +287,7 @@ const addRole = async () => {
   const deptID =
     deptArr.findIndex((element) => element === newRole.department) + 1;
 
-  // insert new row
+  // Insert the new role
   db.promise()
     .query(
       `
@@ -251,6 +301,39 @@ const addRole = async () => {
                 `)
     )
     .catch((err) => console.log(err))
+    .then(() => updateRoleArr())
+    .then(() => mainMenu());
+};
+
+const addEmployee = async () => {
+  const newEmployee = await inquirer.prompt(askForEmployee);
+  //   Compute dept ID from dept name by looking at deptArr
+  const roleID =
+    roleArr.findIndex((element) => element === newEmployee.role) + 1;
+
+  // Index in empArr doesn't need +1 because "None" is at position 0
+  let mgrID = empArr.findIndex((element) => element === newEmployee.manager);
+
+  // Handle the case employee has no manager
+  if (mgrID === "None") {
+    mgrID = null;
+  }
+
+  // // Insert the new role
+  db.promise()
+    .query(
+      `
+                INSERT INTO employee (first_name, last_name, role_id, manager_id)
+                VALUES ("${newEmployee.firstName}", "${newEmployee.lastName}", ${roleID}, ${mgrID})
+                `
+    )
+    .then(() =>
+      console.log(`
+                Employee "${newEmployee.firstName} ${newEmployee.lastName}" added
+                `)
+    )
+    .catch((err) => console.log(err))
+    .then(() => updateEmpArr())
     .then(() => mainMenu());
 };
 
@@ -269,30 +352,41 @@ const updateDeptArr = () => {
   });
 };
 
+// Helper function to pull roles into an array
+const updateRoleArr = () => {
+  db.query(` SELECT title FROM role`, (err, result) => {
+    if (err) {
+      console.log(err);
+    }
+    result.forEach((role) => {
+      // Check if there is a new role in the table before adding to roleArr
+      if (!roleArr.includes(role.title)) {
+        roleArr.push(role.title);
+      }
+    });
+  });
+};
+
+const updateEmpArr = () => {
+  db.query(` SELECT first_name, last_name FROM employee`, (err, result) => {
+    if (err) {
+      console.log(err);
+    }
+    result.forEach((name) => {
+      concatName = name.first_name + " " + name.last_name;
+      //   Check if there is a new employee in the table before adding to empArr
+      if (!empArr.includes(concatName)) {
+        empArr.push(concatName);
+      }
+    });
+  });
+};
+
 // Initialize program
 const init = () => {
   updateDeptArr();
+  updateRoleArr();
+  updateEmpArr();
   mainMenu();
 };
 init();
-
-// ~~~~~~
-// const addDepartment = () => {
-//   inquirer
-//     .prompt(askForDepartment)
-//     .then((response) => {
-//       db.query(
-//         `
-//       INSERT INTO department (name)
-//       VALUES ("${response.department}")
-//       `,
-//         (err, result) => {
-//           if (err) {
-//             console.log(err);
-//           }
-//           console.table(result);
-//         }
-//       );
-//     })
-//     .catch((err) => console.error(err));
-// };
