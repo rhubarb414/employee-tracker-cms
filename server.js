@@ -191,6 +191,8 @@ const mainMenu = () => {
         addEmployee();
       } else if (response.menuChoice === "Update Employee Role") {
         updateEmpRole();
+      } else if (response.menuChoice === "Quit") {
+        process.exit();
       } else {
         console.log("User chose " + response.menuChoice);
       }
@@ -262,20 +264,6 @@ const viewRoles = () => {
   );
 };
 
-// ~~ Not in use. Using ./lib/view.js~~
-
-// // View all departments and their id
-// const viewDepartments = () => {
-//   db.query(` SELECT * FROM department`, (err, result) => {
-//     if (err) {
-//       console.log(err);
-//     }
-//     console.log("\n");
-//     console.table(`"${result}"`);
-//     mainMenu();
-//   });
-// };
-
 //addDepartment using a promise
 const addDepartment = () => {
   inquirer
@@ -300,6 +288,7 @@ const addDepartment = () => {
     .catch((err) => console.error(err));
 };
 
+// Add new role
 const addRole = async () => {
   const newRole = await inquirer.prompt(askForRole);
   // Compute dept ID from dept name by looking at deptArr
@@ -324,6 +313,7 @@ const addRole = async () => {
     .then(() => mainMenu());
 };
 
+// Add new employee
 const addEmployee = async () => {
   const newEmployee = await inquirer.prompt(askForEmployee);
   //   Compute dept ID from dept name by looking at deptArr
@@ -355,7 +345,7 @@ const addEmployee = async () => {
     .then(() => updateEmpArr())
     .then(() => mainMenu());
 };
-
+// Update employee role
 const updateEmpRole = async () => {
   const roleUpdate = await inquirer.prompt(askForEmpNewRole);
   //   Compute dept ID from dept name by looking at deptArr
