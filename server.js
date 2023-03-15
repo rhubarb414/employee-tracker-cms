@@ -231,60 +231,13 @@ const addDepartment = () => {
     .catch((err) => console.error(err));
 };
 
-// Add role using a promise
-// const addRole = () => {
-//   inquirer
-//     .prompt(askForRole)
-//     .then(async (response) => {
-//       const deptID = await getDeptID(response.department);
-//       console.log("dept ID = " + deptID);
-
-//       db.promise()
-//         .query(
-//           `
-//           INSERT INTO role (title, salary, department_id)
-//           VALUES ("${response.title}", ${response.salary}, ${deptID})
-//           `
-//         )
-//         .then(() =>
-//           console.log(`
-//           Role "${response.title}" added
-//           `)
-//         )
-//         .catch((err) => console.log(err))
-//         .then(() => mainMenu());
-//     })
-//     .catch((err) => console.error(err));
-// };
-
-// const addRole = async () => {
-//   const newRole = await inquirer.prompt(askForRole);
-//   //   console.log(newRole.department);
-//   const deptID = await getDeptID(newRole.department);
-//   console.log("dept ID = " + deptID);
-
-//   db.promise()
-//     .query(
-//       `
-//               INSERT INTO role (title, salary, department_id)
-//               VALUES ("${newRole.title}", ${newRole.salary}, ${deptID})
-//               `
-//     )
-//     .then(() =>
-//       console.log(`
-//               Role "${newRole.title}" added
-//               `)
-//     )
-//     .catch((err) => console.log(err))
-//     .then(() => mainMenu());
-// };
-
 const addRole = async () => {
   const newRole = await inquirer.prompt(askForRole);
-  //   console.log(newRole.department);
-  const deptID = await getDeptID(newRole.department);
-  console.log("dept ID = " + deptID);
+  // Compute dept ID from dept name by looking at deptArr
+  const deptID =
+    deptArr.findIndex((element) => element === newRole.department) + 1;
 
+  // insert new row
   db.promise()
     .query(
       `
@@ -301,43 +254,6 @@ const addRole = async () => {
     .then(() => mainMenu());
 };
 
-// // Helper function get department id from department name.
-// // Takes a string
-// const getDeptID = async (name) => {
-//   const rowID = await db
-//     .promise()
-//     .query(`SELECT * FROM department`)
-//     .then((response) => {
-//       //response[0] is the table object
-//       response[0].forEach((row) => {
-//         if (row.name === name) {
-//           console.log(row.id);
-//           return row.id;
-//         }
-//       });
-//     })
-//     .catch((err) => console.log(err));
-//   return rowID;
-// };
-
-const getDeptID = (name) => {
-  db.promise()
-    .query(`SELECT * FROM department`)
-    .then((response) => {
-      //response[0] is the table object
-      response[0].forEach((dept) => {
-        if (dept.name === name) {
-          console.log(dept.id);
-          return dept.id;
-        }
-      });
-    })
-    .catch((err) => console.log(err));
-};
-
-const thingOne = getDeptID("Finance"); // delete
-console.log("thing one = " + thingOne); //delete
-
 // Helper function to pull departments into an array
 const updateDeptArr = () => {
   db.query(` SELECT name FROM department`, (err, result) => {
@@ -352,23 +268,6 @@ const updateDeptArr = () => {
     });
   });
 };
-
-// Helper function get department id from department name.
-// Takes a string
-// const getDeptID = (name) => {
-
-//   db.query(` SELECT * FROM department`, (err, table) => {
-//     if (err) {
-//       console.log(err);
-//     }
-//     table.forEach((row) => {
-//       if (row.name === name) {
-//         console.log(row.id);
-//         return row.id;
-//       }
-//     });
-//   });
-// };
 
 // Initialize program
 const init = () => {
